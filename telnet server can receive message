@@ -1,0 +1,72 @@
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.IO;
+
+class Program
+{
+    static void Main()
+    {
+        RunServer();
+    }
+
+    static void RunServer()
+    {
+        TcpListener listener;
+        Socket connection;
+        NetworkStream socketStream2;
+        try
+        {
+            listener = new TcpListener(IPAddress.Any, 43);
+            listener.Start();
+            Console.WriteLine("RunServer started listening...");
+            while (true)
+            {
+                connection = listener.AcceptSocket();
+                socketStream2 = new NetworkStream(connection);
+                Console.WriteLine("Connection Received ");
+
+                DoRequest(socketStream2);
+
+                socketStream2.Close();
+                connection.Close();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Exception: " + e.ToString());
+        }
+    }
+
+    static void DoRequest(NetworkStream socketStream)
+    {
+        try
+        {
+            StreamReader sr = new StreamReader(socketStream);
+            StreamWriter sw = new StreamWriter(socketStream);
+
+            string line = sr.ReadLine().Trim();
+            Console.WriteLine("Rwspond Received: " + line);
+            string[] sections = line.Split(' ', 2);
+            switch (sections[0])
+            {
+                case "NOOP":
+                    Console.WriteLine("NOOP Performed");
+                    break;
+                case "ECHO":
+                    Console.WriteLine("ECHO Preformed: Returned: " + sections[1]);
+                    sw.WriteLine(sections[1]);
+                    sw.Flush();
+                    break;
+                default:
+                    Console.WriteLine("Unrecognised Command");
+                    break;
+            }
+        }
+        catch
+        {
+            Console.WriteLine("SomeThing went wrong");
+        }
+    }
+}
+
